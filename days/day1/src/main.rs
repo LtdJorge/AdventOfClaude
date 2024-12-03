@@ -78,7 +78,7 @@ pub fn solve_part2(input: &str) -> Result<i32, Box<dyn Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let input = fs::read_to_string("input.txt")?;
+    let input = fs::read_to_string("input/input1.txt")?;
 
     let part1_result = solve_part1(&input)?;
     println!("Part 1 solution: {}", part1_result);
