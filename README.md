@@ -11,7 +11,7 @@ For my own Rust solutions see [AdventOfCrust](https://github.com/LtdJorge/Advent
   cosmetic warning resolutions, like moving the tests module after the main function.
 - Implementations are not guaranteed to compile. Following is a table with the results, a `Day N Part M` solution either
   doesn't compile, compiles but isn't correct or is correct.
-- If Claude gives specific instructions like creating a file or
+- Specific instructions given by Claude like creating a file or editing a prior solution are always followed
 
 ## Results
 
@@ -20,3 +20,5 @@ For my own Rust solutions see [AdventOfCrust](https://github.com/LtdJorge/Advent
 | 1   | 1    | Correct |
 | 1   | 2    | Correct |
 | 2   | 1    | Correct |
+| 3   | 1    | Correct |
+| 3   | 2    | Correct |
