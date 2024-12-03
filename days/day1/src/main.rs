@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::str::FromStr;
@@ -49,6 +50,21 @@ impl HistorianLists {
             .map(|(a, b)| (a - b).abs())
             .sum()
     }
+
+    fn calculate_similarity_score(&self) -> i32 {
+        // Create frequency map for right list
+        let right_frequencies: HashMap<i32, i32> =
+            self.right.iter().fold(HashMap::new(), |mut map, &num| {
+                *map.entry(num).or_insert(0) += 1;
+                map
+            });
+
+        // Calculate similarity score
+        self.left
+            .iter()
+            .map(|&num| num * right_frequencies.get(&num).unwrap_or(&0))
+            .sum()
+    }
 }
 
 pub fn solve_part1(input: &str) -> Result<i32, Box<dyn Error>> {
@@ -56,10 +72,20 @@ pub fn solve_part1(input: &str) -> Result<i32, Box<dyn Error>> {
     Ok(lists.calculate_total_distance())
 }
 
+pub fn solve_part2(input: &str) -> Result<i32, Box<dyn Error>> {
+    let lists = HistorianLists::from_str(input)?;
+    Ok(lists.calculate_similarity_score())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let input = fs::read_to_string("input.txt")?;
-    let result = solve_part1(&input)?;
-    println!("Solution: {}", result);
+
+    let part1_result = solve_part1(&input)?;
+    println!("Part 1 solution: {}", part1_result);
+
+    let part2_result = solve_part2(&input)?;
+    println!("Part 2 solution: {}", part2_result);
+
     Ok(())
 }
 
@@ -67,21 +93,29 @@ fn main() -> Result<(), Box<dyn Error>> {
 mod tests {
     use super::*;
 
+    const EXAMPLE_INPUT: &str = "3 4\n4 3\n2 5\n1 3\n3 9\n3 3";
+
     #[test]
-    fn test_example() {
-        let input = "3 4\n4 3\n2 5\n1 3\n3 9\n3 3";
-        assert_eq!(solve_part1(input).unwrap(), 11);
+    fn test_part1_example() {
+        assert_eq!(solve_part1(EXAMPLE_INPUT).unwrap(), 11);
+    }
+
+    #[test]
+    fn test_part2_example() {
+        assert_eq!(solve_part2(EXAMPLE_INPUT).unwrap(), 31);
     }
 
     #[test]
     fn test_empty_input() {
         let input = "";
         assert!(solve_part1(input).is_ok());
+        assert!(solve_part2(input).is_ok());
     }
 
     #[test]
     fn test_invalid_input() {
         let input = "3 4 5\n4 3";
         assert!(solve_part1(input).is_err());
+        assert!(solve_part2(input).is_err());
     }
 }
