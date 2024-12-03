@@ -1,5 +1,20 @@
 use std::fs;
 
+fn parse_control_instruction(text: &str, pos: usize) -> Option<(usize, bool)> {
+    if pos + 4 > text.len() {
+        return None;
+    }
+
+    // Check for do() or don't()
+    if text[pos..].starts_with("do()") {
+        Some((pos + 4, true))
+    } else if text[pos..].starts_with("don't()") {
+        Some((pos + 7, false))
+    } else {
+        None
+    }
+}
+
 fn parse_mul_instruction(text: &str, pos: usize) -> Option<(usize, u32)> {
     // Check if we have enough characters left for a minimal mul(X,Y) instruction
     if pos + 7 > text.len() {
@@ -50,10 +65,21 @@ fn parse_mul_instruction(text: &str, pos: usize) -> Option<(usize, u32)> {
 fn process_memory(input: &str) -> u32 {
     let mut pos = 0;
     let mut sum = 0;
+    let mut multiply_enabled = true; // Multiplications are enabled by default
 
     while pos < input.len() {
+        // First check for control instructions
+        if let Some((new_pos, enabled)) = parse_control_instruction(input, pos) {
+            multiply_enabled = enabled;
+            pos = new_pos;
+            continue;
+        }
+
+        // Then check for multiplication instructions
         if let Some((new_pos, result)) = parse_mul_instruction(input, pos) {
-            sum += result;
+            if multiply_enabled {
+                sum += result;
+            }
             pos = new_pos;
         } else {
             pos += 1;
@@ -66,7 +92,7 @@ fn process_memory(input: &str) -> u32 {
 fn main() -> std::io::Result<()> {
     let input = fs::read_to_string("input/input3.txt")?;
     let result = process_memory(&input);
-    println!("Sum of all multiplication results: {}", result);
+    println!("Sum of all enabled multiplication results: {}", result);
     Ok(())
 }
 
@@ -75,20 +101,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_example() {
+    fn test_part1_example() {
         let input = "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))";
         assert_eq!(process_memory(input), 161);
     }
 
     #[test]
-    fn test_invalid_instructions() {
-        let input = "mul(4* mul(6,9! ?(12,34) mul ( 2 , 4 )";
-        assert_eq!(process_memory(input), 0);
+    fn test_part2_example() {
+        let input = "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)do()?mul(8,5))";
+        assert_eq!(process_memory(input), 48);
     }
 
     #[test]
-    fn test_valid_range() {
-        let input = "mul(1,1)mul(999,999)mul(0,5)mul(1000,5)";
-        assert_eq!(process_memory(input), 999000); // Only 1*1 + 999*999
+    fn test_multiple_controls() {
+        let input = "mul(2,3)don't()mul(4,5)do()mul(6,7)don't()mul(8,9)";
+        assert_eq!(process_memory(input), 48); // 2*3 + 6*7
+    }
+
+    #[test]
+    fn test_controls_with_invalid_instructions() {
+        let input = "do()mul(1,2)don't()mul(3,4]do()mul(5,6)";
+        assert_eq!(process_memory(input), 32); // 1*2 + 5*6
     }
 }
