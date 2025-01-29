@@ -15,10 +15,14 @@ For my own Rust solutions see [AdventOfCrust](https://github.com/LtdJorge/Advent
 
 ## Results
 
-| Day | Part | Result  |
-|-----|------|---------|
-| 1   | 1    | Correct |
-| 1   | 2    | Correct |
-| 2   | 1    | Correct |
-| 3   | 1    | Correct |
-| 3   | 2    | Correct |
+| Day | Part | Result                                      |
+|-----|------|---------------------------------------------|
+| 1   | 1    | Correct                                     |
+| 1   | 2    | Correct                                     |
+| 2   | 1    | Correct                                     |
+| 3   | 1    | Correct                                     |
+| 3   | 2    | Correct                                     |
+| 4   | 1    | Correct                                     |
+| 4   | 2    | Correct, but removes the results for part 1 |
+| 5   | 1    | Correct                                     |
+| 5   | 2    | Correct                                     |
