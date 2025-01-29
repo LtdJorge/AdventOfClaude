@@ -1,10 +1,19 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 
 fn main() {
     let input = fs::read_to_string("input/input5.txt").expect("Failed to read input file");
-    let result = solve_part1(&input);
-    println!("Sum of middle page numbers: {}", result);
+    let result1 = solve_part1(&input);
+    println!(
+        "Part 1 - Sum of middle page numbers from valid updates: {}",
+        result1
+    );
+
+    let result2 = solve_part2(&input);
+    println!(
+        "Part 2 - Sum of middle page numbers from corrected invalid updates: {}",
+        result2
+    );
 }
 
 #[derive(Debug)]
@@ -74,6 +83,56 @@ fn is_valid_order(pages: &[u32], rules: &HashMap<u32, HashSet<u32>>) -> bool {
     true
 }
 
+fn topological_sort(pages: &[u32], rules: &HashMap<u32, HashSet<u32>>) -> Vec<u32> {
+    // Build adjacency list and in-degree count for present pages
+    let mut adj_list: HashMap<u32, HashSet<u32>> = HashMap::new();
+    let mut in_degree: HashMap<u32, usize> = HashMap::new();
+    let pages_set: HashSet<_> = pages.iter().copied().collect();
+
+    // Initialize in-degree to 0 for all pages
+    for &page in pages {
+        in_degree.insert(page, 0);
+        adj_list.insert(page, HashSet::new());
+    }
+
+    // Build graph from rules, only considering pages present in the update
+    for (&from, to_pages) in rules {
+        if pages_set.contains(&from) {
+            for &to in to_pages {
+                if pages_set.contains(&to) {
+                    adj_list.entry(from).or_default().insert(to);
+                    *in_degree.entry(to).or_default() += 1;
+                }
+            }
+        }
+    }
+
+    // Kahn's algorithm for topological sort
+    let mut result = Vec::with_capacity(pages.len());
+    let mut queue: VecDeque<_> = in_degree
+        .iter()
+        // this pattern relies on behavior which may change in edition 2024 cannot implicitly match against multiple layers of reference Note: for more information, see <https:// doc. rust-lang. org/ nightly/ edition-guide/ rust-2024/ match-ergonomics. html>
+        // .filter(|(_, &count)| count == 0)
+        .filter(|&(_, &count)| count == 0)
+        .map(|(&page, _)| page)
+        .collect();
+
+    while let Some(page) = queue.pop_front() {
+        result.push(page);
+
+        if let Some(neighbors) = adj_list.get(&page) {
+            for &next in neighbors {
+                *in_degree.get_mut(&next).unwrap() -= 1;
+                if in_degree[&next] == 0 {
+                    queue.push_back(next);
+                }
+            }
+        }
+    }
+
+    result
+}
+
 fn solve_part1(input: &str) -> u32 {
     let (rules, updates) = parse_input(input);
 
@@ -84,13 +143,24 @@ fn solve_part1(input: &str) -> u32 {
         .sum()
 }
 
+fn solve_part2(input: &str) -> u32 {
+    let (rules, updates) = parse_input(input);
+
+    updates
+        .iter()
+        .filter(|update| !is_valid_order(&update.pages, &rules))
+        .map(|update| {
+            let ordered = topological_sort(&update.pages, &rules);
+            Update { pages: ordered }.middle_page()
+        })
+        .sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_example() {
-        let input = "47|53
+    const TEST_INPUT: &str = "47|53
 97|13
 97|61
 97|47
@@ -119,6 +189,13 @@ mod tests {
 61,13,29
 97,13,75,29,47";
 
-        assert_eq!(solve_part1(input), 143);
+    #[test]
+    fn test_part1() {
+        assert_eq!(solve_part1(TEST_INPUT), 143);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(solve_part2(TEST_INPUT), 123);
     }
 }
